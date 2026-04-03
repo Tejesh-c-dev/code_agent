@@ -1,0 +1,24 @@
+body {
+    background-color: #f0f0f0; /* Set the background color of the body */
+}
+
+#header {
+    color: #333333; /* Set the text color for the header */
+    padding: 20px; /* Add padding around the header */
+    text-align: center; /* Center the text in the header */
+}
+
+#content {
+    margin: 20px; /* Add margin around the content area */
+    font-size: 16px; /* Set the font size for the content */
+    line-height: 1.5; /* Set the line height for better readability */
+}
+
+#footer {
+    color: #666666; /* Set the text color for the footer */
+    text-align: center; /* Center the text in the footer */
+    padding: 10px; /* Add padding around the footer */
+    position: relative; /* Position relative for proper layout */
+    bottom: 0; /* Align to the bottom */
+    width: 100%; /* Stretch the footer to full width */
+}

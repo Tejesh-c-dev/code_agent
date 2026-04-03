@@ -1,8 +1,8 @@
 import sys
 
-from smol_dev.prompts import plan, specify_file_paths, generate_code_sync
-from smol_dev.utils import generate_folder, write_file
-from smol_dev.main import main
+from dev_assistant.prompts import plan, specify_file_paths, generate_code_sync
+from dev_assistant.utils import generate_folder, write_file
+from dev_assistant.main import main
 import argparse
 
 

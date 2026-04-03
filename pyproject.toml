@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "smol_dev"
+name = "dev_assistant"
 version = "0.0.3"
-description = "python module of smol developer"
+description = "python module of dev assistant"
 authors = ["swyx <swyx@dontemail.me>"]
 license = "MIT"
 readme = "readme.md"
-packages = [{ include = "smol_dev" }]
+packages = [{ include = "dev_assistant" }]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0.0"
@@ -23,7 +23,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 src = "src.__main__:main"
-api = "smol_dev.api:main"
+api = "dev_assistant.api:main"
 
 [tool.poetry.urls]
 "Homepage" = "https://github.com/smol-ai/developer"
