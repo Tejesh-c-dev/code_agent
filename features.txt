@@ -1,0 +1,71 @@
+﻿# Quick note: one-line comment added as requested.
+# Features in dev_assistant Project
+
+## Overview
+A human-centric, coherent whole-program synthesis AI agent that generates complete codebases from natural language prompts.
+
+## Core Features
+
+### 1. Code Generation Pipeline (dev_assistant/main.py)
+- **plan()**: Creates a detailed development plan in YAML/Markdown format
+  - Streaming response support with real-time output
+  - Generates shared_dependencies.md describing file structure, exports, data schemas, DOM elements, and function names
+- **specify_file_paths()**: Extracts file paths from the plan using regex pattern matching
+  - Supports multiple output formats (markdown lists, numbered lists, quoted paths)
+  - Path sanitization for cross-platform compatibility
+- **generate_code_sync() / generate_code()**: Generates code for individual files
+  - Async and sync versions available
+  - Streaming support with progress tracking
+  - Automatic code fence removal
+  - Retry logic with exponential backoff (up to 6 attempts)
+
+### 2. API Support (dev_assistant/api.py)
+- Agent Protocol v1.0 compliance
+- Step-based task execution:
+  - PLAN step: Generate shared dependencies
+  - SPECIFY_FILE_PATHS step: Determine file structure
+  - GENERATE_CODE step: Create code for each file
+- Automatic artifact creation and workspace management
+- Database-backed step tracking
+
+### 3. OpenRouter Integration (dev_assistant/openrouter_client.py)
+- OpenRouter API client for multi-model support
+- Streaming and non-streaming completions
+- Function calling support (experimental)
+- Proper error handling with custom exceptions
+
+### 4. CLI Interface (main.py)
+- Command-line arguments:
+  - --prompt: App description or path to .md file
+  - --model: Model selection (default: openai/gpt-oss-20b:free)
+  - --generate_folder_path: Output directory
+  - --debug: Enable verbose output with streaming stats
+- Supports both direct prompts and prompt files
+
+### 5. Utility Functions (dev_assistant/utils.py)
+- generate_folder(): Creates output directories (with cleanup)
+- write_file(): Writes code files with automatic directory creation
+
+### 6. Path Sanitization
+- Cross-platform path handling (Windows/Unix)
+- Removal of markdown/list formatting artifacts
+- Extension validation for allowed file types
+
+## Dependencies
+- openai: OpenAI API client (v0.27.8)
+- openai-function-call: Function calling wrapper
+- tenacity: Retry logic
+- agent-protocol: Agent Protocol compliance
+- aiohttp: Async HTTP client
+- python-dotenv: Environment variable management
+- requests: HTTP client
+
+## Supported Models
+- OpenRouter models (via OPENROUTER_API_KEY)
+- Default: openai/gpt-oss-20b:free
+- Configurable via --model flag
+
+## Output
+- Generates complete, runnable codebases
+- Creates shared_deps.md documenting project structure
+- Supports multiple file types: HTML, CSS, JS, JSX, TS, TSX, Python, JSON, Markdown, YAML, TOML, XML, Shell, SQL

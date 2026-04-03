@@ -1,11 +1,15 @@
+﻿# Quick note: one-line comment added as requested.
+"""Agent Protocol adapter updated to use the configured per-step models."""
+
 import enum
 import os
 from pathlib import Path
 
-from dev_assistant.prompts import plan, specify_file_paths, generate_code
-from dev_assistant.utils import write_file
-
 from agent_protocol import Agent, Step, Task
+
+from dev_assistant.model_config import get_model
+from dev_assistant.prompts import generate_code, plan, specify_file_paths
+from dev_assistant.utils import write_file
 
 
 class StepTypes(str, enum.Enum):
@@ -16,7 +20,7 @@ class StepTypes(str, enum.Enum):
 
 async def _generate_shared_deps(step: Step) -> Step:
     task = await Agent.db.get_task(step.task_id)
-    shared_deps = plan(task.input)
+    shared_deps = plan(task.input, model=get_model("plan"))
     await Agent.db.create_step(
         step.task_id,
         StepTypes.SPECIFY_FILE_PATHS,
@@ -30,7 +34,7 @@ async def _generate_shared_deps(step: Step) -> Step:
 
 async def _generate_file_paths(task: Task, step: Step) -> Step:
     shared_deps = step.additional_properties["shared_deps"]
-    file_paths = specify_file_paths(task.input, shared_deps)
+    file_paths = specify_file_paths(task.input, shared_deps, model=get_model("specify_file_paths"))
     for file_path in file_paths[:-1]:
         await Agent.db.create_step(
             task.task_id,
@@ -59,7 +63,7 @@ async def _generate_code(task: Task, step: Step) -> Step:
     shared_deps = step.additional_properties["shared_deps"]
     file_path = step.additional_properties["file_path"]
 
-    code = await generate_code(task.input, shared_deps, file_path)
+    code = await generate_code(task.input, shared_deps, file_path, model=get_model("generate_code"))
     step.output = code
 
     write_file(os.path.join(Agent.get_workspace(task.task_id), file_path), code)

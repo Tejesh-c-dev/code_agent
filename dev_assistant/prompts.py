@@ -1,19 +1,20 @@
+﻿# Quick note: one-line comment added as requested.
+"""Prompt orchestration helpers that route each step through the configured model."""
+
 import asyncio
-import re
-import time
-import os
 import json
-from typing import List, Optional, Callable, Any
+import logging
+import os
+import re
+from typing import Any, Callable, List, Optional
 
 from dotenv import load_dotenv
 from openai_function_call import openai_function
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_random_exponential,
-)
-import logging
-import requests
+from tenacity import retry, stop_after_attempt, wait_random_exponential
+
+from dev_assistant.model_config import get_model
+from dev_assistant.openrouter_client import OpenRouterCompletion
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,21 +32,11 @@ API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not API_KEY:
     raise ValueError("OPENROUTER_API_KEY environment variable not set. Please set it in your .env file.")
 
-BASE_URL = "https://openrouter.ai/api/v1"
-
-def get_headers():
-    return {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/smol-ai/developer",
-        "X-Title": "smol-developer"
-    }
 
 @openai_function
 def file_paths(files_to_edit: List[str]) -> List[str]:
-    """
-    Construct a list of strings.
-    """
+    """Construct a list of strings."""
+
     return files_to_edit
 
 
@@ -85,7 +76,7 @@ def _extract_file_paths(content: str) -> List[str]:
     # Keep order while removing duplicates and obvious non-file strings.
     allowed_ext = {
         "html", "css", "js", "jsx", "ts", "tsx", "py", "json", "md",
-        "txt", "yml", "yaml", "toml", "xml", "sh", "sql"
+        "txt", "yml", "yaml", "toml", "xml", "sh", "sql",
     }
     seen = set()
     result: List[str] = []
@@ -100,7 +91,22 @@ def _extract_file_paths(content: str) -> List[str]:
     return result
 
 
-def specify_file_paths(prompt: str, plan: str, model: str = 'openai/gpt-4o-mini'):
+def _create_completion(messages: List[dict], model: str, *, stream: bool, step: str):
+    return OpenRouterCompletion.create(
+        model=model,
+        messages=messages,
+        temperature=0.7,
+        stream=stream,
+        step=step,
+    )
+
+
+def specify_file_paths(
+    prompt: str,
+    plan: str,
+    model: str = get_model("specify_file_paths"),
+    return_usage: bool = False,
+):
     messages = [
         {
             "role": "system",
@@ -117,27 +123,24 @@ Given the prompt and the plan, return a list of strings corresponding to the new
             "content": f""" The plan we have agreed on is: {plan} """,
         },
     ]
-    
-    payload = {
-        "model": model,
-        "temperature": 0.7,
-        "messages": messages,
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/chat/completions",
-        json=payload,
-        headers=get_headers()
-    )
-    response.raise_for_status()
-    result = response.json()
-    
+
+    result = _create_completion(messages, model, stream=False, step="specify_file_paths")
+
     content = result["choices"][0]["message"]["content"]
     files = _extract_file_paths(content)
-    return files if files else ['index.html', 'style.css', 'script.js']
+    resolved = files if files else ["index.html", "style.css", "script.js"]
+    if return_usage:
+        return resolved, result.get("usage")
+    return resolved
 
 
-def plan(prompt: str, stream_handler: Optional[Callable[[bytes], None]] = None, model: str='openai/gpt-4o-mini', extra_messages: List[Any] = []):
+def plan(
+    prompt: str,
+    stream_handler: Optional[Callable[[bytes], None]] = None,
+    model: str = get_model("plan"),
+    extra_messages: List[Any] = [],
+    return_usage: bool = False,
+):
     messages = [
         {
             "role": "system",
@@ -154,32 +157,19 @@ Respond only with plans following the above schema.
         },
         *extra_messages,
     ]
-    
-    payload = {
-        "model": model,
-        "temperature": 0.7,
-        "stream": True,
-        "messages": messages,
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/chat/completions",
-        json=payload,
-        headers=get_headers(),
-        stream=True
-    )
-    response.raise_for_status()
-    
+
+    response = _create_completion(messages, model, stream=True, step="plan")
+
     collected_content = []
     for line in response.iter_lines():
         if line:
-            line_str = line.decode('utf-8')
-            if line_str.startswith('data: '):
+            line_str = line.decode("utf-8")
+            if line_str.startswith("data: "):
                 try:
                     chunk = json.loads(line_str[6:])
-                    if chunk.get('choices'):
-                        delta = chunk['choices'][0].get('delta', {})
-                        content = delta.get('content', '')
+                    if chunk.get("choices"):
+                        delta = chunk["choices"][0].get("delta", {})
+                        content = delta.get("content", "")
                         if content:
                             collected_content.append(content)
                             if stream_handler:
@@ -189,16 +179,30 @@ Respond only with plans following the above schema.
                                     logger.info(f"stream_handler error: {err}")
                 except json.JSONDecodeError:
                     continue
-    
-    full_reply_content = "".join(collected_content)
-    return full_reply_content
 
+    content = "".join(collected_content)
+    if content.strip():
+        if return_usage:
+            return content, getattr(response, "usage", None)
+        return content
 
+    # Some providers may not emit token deltas in stream mode; recover via non-stream call.
+    fallback = _create_completion(messages, model, stream=False, step="plan")
+    fallback_content = fallback["choices"][0]["message"]["content"]
+    if return_usage:
+        return fallback_content, fallback.get("usage")
+    return fallback_content
 
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
-async def generate_code(prompt: str, plan: str, current_file: str, stream_handler: Optional[Callable[Any, Any]] = None,
-                        model: str = 'openai/gpt-4o-mini') -> str:
+async def generate_code(
+    prompt: str,
+    plan: str,
+    current_file: str,
+    stream_handler: Optional[Callable[[bytes], None]] = None,
+    model: str = get_model("generate_code"),
+    return_usage: bool = False,
+) -> str:
     messages = [
         {
             "role": "system",
@@ -245,34 +249,19 @@ Begin generating the code now.
 """,
         },
     ]
-    
-    payload = {
-        "model": model,
-        "temperature": 0.7,
-        "stream": True,
-        "messages": messages,
-    }
-    
-    response = requests.post(
-        f"{BASE_URL}/chat/completions",
-        json=payload,
-        headers=get_headers(),
-        stream=True
-    )
-    response.raise_for_status()
-    
+
+    response = _create_completion(messages, model, stream=True, step="generate_code")
+
     collected_content = []
-    start_time = time.time()
-    
     for line in response.iter_lines():
         if line:
-            line_str = line.decode('utf-8')
-            if line_str.startswith('data: '):
+            line_str = line.decode("utf-8")
+            if line_str.startswith("data: "):
                 try:
                     chunk = json.loads(line_str[6:])
-                    if chunk.get('choices'):
-                        delta = chunk['choices'][0].get('delta', {})
-                        content = delta.get('content', '')
+                    if chunk.get("choices"):
+                        delta = chunk["choices"][0].get("delta", {})
+                        content = delta.get("content", "")
                         if content:
                             collected_content.append(content)
                             if stream_handler:
@@ -282,16 +271,30 @@ Begin generating the code now.
                                     logger.info(f"stream_handler error: {err}")
                 except json.JSONDecodeError:
                     continue
-    
+
     code_file = "".join(collected_content)
-    
+    if not code_file.strip():
+        # Some providers may not emit token deltas in stream mode; recover via non-stream call.
+        fallback = _create_completion(messages, model, stream=False, step="generate_code")
+        code_file = fallback["choices"][0]["message"]["content"]
+        fallback_usage = fallback.get("usage")
+    else:
+        fallback_usage = getattr(response, "usage", None)
+
     # Remove code fences if present
     pattern = r"```[\w\s]*\n([\s\S]*?)```"
     code_blocks = re.findall(pattern, code_file, re.MULTILINE)
-    return code_blocks[0] if code_blocks else code_file
+    resolved_code = code_blocks[0] if code_blocks else code_file
+    if return_usage:
+        return resolved_code, fallback_usage
+    return resolved_code
 
 
-def generate_code_sync(prompt: str, plan: str, current_file: str,
-                       stream_handler: Optional[Callable[Any, Any]] = None,
-                       model: str = 'openai/gpt-4o-mini') -> str:
+def generate_code_sync(
+    prompt: str,
+    plan: str,
+    current_file: str,
+    stream_handler: Optional[Callable[[bytes], None]] = None,
+    model: str = get_model("generate_code"),
+) -> str:
     return asyncio.run(generate_code(prompt, plan, current_file, stream_handler, model))
