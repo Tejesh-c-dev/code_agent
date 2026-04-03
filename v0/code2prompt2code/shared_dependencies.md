@@ -1,3 +1,4 @@
+﻿<!-- Quick note: one-line comment added as requested. -->
 ## Shared dependencies:
 
 1. DOM element IDs:

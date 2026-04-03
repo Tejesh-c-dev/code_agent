@@ -1,3 +1,4 @@
+﻿# Quick note: one-line comment added as requested.
 import modal
 import os
 from constants import DEFAULT_DIR, DEFAULT_MODEL, DEFAULT_MAX_TOKENS, EXTENSION_TO_SKIP

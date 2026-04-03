@@ -1,3 +1,4 @@
+﻿# Quick note: one-line comment added as requested.
 import os
 from constants import EXTENSION_TO_SKIP
 

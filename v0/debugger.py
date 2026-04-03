@@ -1,3 +1,4 @@
+﻿# Quick note: one-line comment added as requested.
 import modal
 import os
 from constants import DEFAULT_DIR, DEFAULT_MODEL, DEFAULT_MAX_TOKENS, EXTENSION_TO_SKIP
@@ -26,7 +27,7 @@ def walk_directory(directory):
 
 
 @stub.local_entrypoint()
-def main(prompt, directory=DEFAULT_DIR, model="gpt-3.5-turbo"):
+def main(prompt, directory=DEFAULT_DIR, model=DEFAULT_MODEL):
   code_contents = walk_directory(directory)
 
   # Now, `code_contents` is a dictionary that contains the content of all your non-image files
@@ -52,7 +53,7 @@ def main(prompt, directory=DEFAULT_DIR, model="gpt-3.5-turbo"):
     concurrency_limit=5,
     timeout=120,
 )
-def generate_response(system_prompt, user_prompt, model="gpt-3.5-turbo", *args):
+def generate_response(system_prompt, user_prompt, model=DEFAULT_MODEL, *args):
     import openai
 
     # Set up your OpenAI API credentials

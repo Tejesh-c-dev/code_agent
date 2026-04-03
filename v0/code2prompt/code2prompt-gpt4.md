@@ -1,3 +1,4 @@
+﻿<!-- Quick note: one-line comment added as requested. -->
 # Anthropic Claude Summary Extension
 
 A Chrome extension that summarizes web pages using the 

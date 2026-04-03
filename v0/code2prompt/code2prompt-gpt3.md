@@ -1,3 +1,4 @@
+﻿<!-- Quick note: one-line comment added as requested. -->
 The program is a Chrome extension that summarizes web pages using the Anthropic Claude API. It consists of several files: popup.js, styles.css, 
 background.js, popup.html, shared_dependencies.md, and content_script.js. 
 

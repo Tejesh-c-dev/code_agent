@@ -1,0 +1,14 @@
+﻿# Quick note: one-line comment added as requested.
+openai==0.27.8
+openai-function-call==0.0.5
+tenacity==8.2.2
+agent-protocol==1.0.0
+aiohttp==3.8.0
+python-dotenv==1.0.0
+requests==2.31.0
+fastapi==0.100.1
+uvicorn[standard]==0.30.0
+python-multipart==0.0.6
+sqlalchemy>=2.0
+aiosqlite
+passlib[bcrypt]

@@ -1,3 +1,4 @@
+﻿# Quick note: one-line comment added as requested.
 .PHONY: clean build publish
 
 build: clean

@@ -1,3 +1,4 @@
+﻿// Quick note: one-line comment added as requested.
 chrome.action.onClicked.addListener((tab) => {
   chrome.scripting.executeScript({
     target: { tabId: tab.id },

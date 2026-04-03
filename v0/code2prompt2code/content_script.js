@@ -1,3 +1,4 @@
+﻿// Quick note: one-line comment added as requested.
 function storePageContent() {
   const pageTitle = document.title;
   const pageContent = document.body.innerText;

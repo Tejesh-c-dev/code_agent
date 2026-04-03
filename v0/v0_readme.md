@@ -1,3 +1,4 @@
+﻿<!-- Quick note: one-line comment added as requested. -->
 # smol developer
 
 <a href="https://app.e2b.dev/agent/smol-developer" target="_blank" rel="noopener noreferrer">

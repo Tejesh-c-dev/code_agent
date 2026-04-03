@@ -1,3 +1,4 @@
+﻿<!-- Quick note: one-line comment added as requested. -->
 the app is: a Chrome Manifest V3 extension that reads the current page, and offers a popup UI that sends the page content to the Anthropic Claude API along with a prompt to summarize it, and lets the user modify that prompt and re-send the prompt+content to get another summary view of the content.
 
 the files we have decided to generate are: content_script.js, background.js, popup.html, popup.js, popup.css

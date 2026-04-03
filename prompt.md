@@ -1,3 +1,4 @@
+﻿<!-- Quick note: one-line comment added as requested. -->
 a Chrome Manifest V3 extension that reads the current page, and offers a popup UI that has the page title+content and a textarea for a prompt (with a default value we specify). When the user hits submit, it sends the page title+content to the Anthropic Claude API along with the up to date prompt to summarize it. The user can modify that prompt and re-send the prompt+content to get another summary view of the content.
 
 - Only when clicked:

@@ -1,3 +1,4 @@
+﻿// Quick note: one-line comment added as requested.
 document.addEventListener('DOMContentLoaded', () => {
   const content = document.getElementById('content');
   const userPrompt = document.getElementById('userPrompt');
