@@ -4,8 +4,16 @@ import os
 from time import sleep
 from constants import DEFAULT_DIR, DEFAULT_MODEL, DEFAULT_MAX_TOKENS, EXTENSION_TO_SKIP
 import argparse
+
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
 def read_file(filename):
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding="utf-8", errors="replace") as file:
         return file.read()
 
 

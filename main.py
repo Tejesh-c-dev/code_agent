@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import socket
 import sys
 
 import requests
@@ -12,6 +13,12 @@ from dev_assistant.executor import SandboxMode
 from dev_assistant.model_config import get_model
 from dev_assistant.sandbox.docker_executor import DockerSandbox
 from dev_assistant.sandbox.sandbox_config import SANDBOX_SETTINGS
+
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 
 def _print_model_summary(plan_model: str, filepath_model: str, codegen_model: str) -> None:
@@ -44,6 +51,18 @@ def _str_to_bool(value: str) -> bool:
     raise argparse.ArgumentTypeError("Expected a boolean value")
 
 
+def _is_port_available(host: str, port: int) -> bool:
+    """Return True when the requested host/port can be bound."""
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind((host, port))
+        except OSError:
+            return False
+    return True
+
+
 def _build_parser() -> argparse.ArgumentParser:
     """Create the CLI argument parser."""
 
@@ -55,7 +74,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--codegen-model", type=str, default=None, help="Override model for code generation only.")
     parser.add_argument("--list-models", action="store_true", help="List available OpenRouter models and exit.")
     parser.add_argument("--generate_folder_path", type=str, default="generated", help="Path of the folder for generated code.")
-    parser.add_argument("--debug", type=bool, default=False, help="Enable or disable debug mode.")
+    parser.add_argument("--debug", type=_str_to_bool, nargs="?", const=True, default=False, help="Enable or disable debug mode.")
     parser.add_argument("--heal", type=_str_to_bool, nargs="?", const=True, default=True, help="Enable or disable the healing loop.")
     parser.add_argument("--max-heal-attempts", type=int, default=3, help="Maximum syntax-healing retries per file.")
     parser.add_argument("--no-execute", action="store_true", help="Skip execution and healing, generate only.")
@@ -132,22 +151,26 @@ if __name__ == "__main__":
     selected_sandbox_mode = SandboxMode(args.sandbox)
     docker_available = DockerSandbox.is_available()
     if selected_sandbox_mode == SandboxMode.DOCKER and docker_available:
-        print("Sandbox: Docker ✅")
+        print("Sandbox: Docker [OK]")
     elif selected_sandbox_mode == SandboxMode.DOCKER and not docker_available:
-        print("Sandbox: subprocess ⚠️ (unsafe)")
+        print("Sandbox: subprocess [WARN] (unsafe)")
     elif selected_sandbox_mode == SandboxMode.SUBPROCESS:
-        print("Sandbox: subprocess ⚠️ (unsafe)")
+        print("Sandbox: subprocess [WARN] (unsafe)")
     elif selected_sandbox_mode == SandboxMode.AUTO:
         if docker_available:
-            print("Sandbox: Docker ✅")
+            print("Sandbox: Docker [OK]")
         else:
-            print("Sandbox: subprocess ⚠️ (unsafe)")
+            print("Sandbox: subprocess [WARN] (unsafe)")
 
     if args.web:
         from dev_assistant.web_server import app
 
         SANDBOX_SETTINGS["mode"] = args.sandbox
         SANDBOX_SETTINGS["network_disabled"] = not args.sandbox_network
+
+        if not _is_port_available(args.host, args.port):
+            print(f"Port {args.port} on {args.host} is already in use. Re-run with a free port, for example --port 8001.")
+            raise SystemExit(1)
 
         print(f"dev_assistant UI running at http://{args.host}:{args.port}")
         uvicorn.run(app, host=args.host, port=args.port)

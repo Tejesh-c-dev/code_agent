@@ -7,6 +7,17 @@ from utils import clean_dir
 from constants import DEFAULT_DIR, DEFAULT_MODEL, DEFAULT_MAX_TOKENS
 
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
+def read_file(filename):
+    with open(filename, "r", encoding="utf-8", errors="replace") as file:
+        return file.read()
+
+
 def generate_response(system_prompt, user_prompt, *args):
     import openai
     import tiktoken
@@ -108,7 +119,7 @@ def generate_file(
 def main(prompt, directory=DEFAULT_DIR, file=None):
     # read file from prompt if it ends in a .md filetype
     if prompt.endswith(".md"):
-        with open(prompt, "r") as promptfile:
+        with open(prompt, "r", encoding="utf-8", errors="replace") as promptfile:
             prompt = promptfile.read()
 
     print("hi its me, 🐣the smol developer🐣! you said you wanted:")
@@ -139,7 +150,7 @@ def main(prompt, directory=DEFAULT_DIR, file=None):
         # if shared_dependencies.md is there, read it in, else set it to None
         shared_dependencies = None
         if os.path.exists("shared_dependencies.md"):
-            with open("shared_dependencies.md", "r") as shared_dependencies_file:
+            with open("shared_dependencies.md", "r", encoding="utf-8", errors="replace") as shared_dependencies_file:
                 shared_dependencies = shared_dependencies_file.read()
 
         if file is not None:
@@ -201,7 +212,7 @@ def write_file(filename, filecode, directory):
 
     # if file_path does not end with "/"
     if not file_path.endswith("/"):
-        with open(file_path, "w") as file:
+        with open(file_path, "w", encoding="utf-8", errors="replace") as file:
             # Write content to the file
             file.write(filecode)
 

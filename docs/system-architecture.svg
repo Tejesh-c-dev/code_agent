@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-label="dev_assistant system architecture">
+  <defs>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .label { font: 600 16px Arial, sans-serif; fill: #0f172a; }
+      .text { font: 14px Arial, sans-serif; fill: #1f2937; }
+      .box { fill: #f8fafc; stroke: #334155; stroke-width: 2; rx: 10; }
+      .accent { fill: #ecfeff; stroke: #0e7490; stroke-width: 2; rx: 10; }
+      .db { fill: #ecfdf5; stroke: #047857; stroke-width: 2; rx: 10; }
+      .train { fill: #fff7ed; stroke: #c2410c; stroke-width: 2; rx: 10; }
+      .arrow { stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#334155" />
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1400" height="900" fill="#ffffff" />
+  <text x="40" y="52" class="title">dev_assistant System Architecture</text>
+
+  <rect x="40" y="90" width="300" height="120" class="box" />
+  <text x="60" y="122" class="label">Client Layer</text>
+  <text x="60" y="148" class="text">- CLI (main.py)</text>
+  <text x="60" y="170" class="text">- Browser UI (FastAPI)</text>
+
+  <rect x="390" y="90" width="360" height="180" class="accent" />
+  <text x="410" y="122" class="label">Orchestration Layer</text>
+  <text x="410" y="148" class="text">dev_assistant/main.py</text>
+  <text x="410" y="170" class="text">1) plan</text>
+  <text x="410" y="192" class="text">2) file path discovery</text>
+  <text x="410" y="214" class="text">3) code generation</text>
+  <text x="410" y="236" class="text">4) optional review + healing</text>
+
+  <rect x="800" y="90" width="560" height="180" class="box" />
+  <text x="820" y="122" class="label">Model Layer</text>
+  <text x="820" y="148" class="text">dev_assistant/prompts.py</text>
+  <text x="820" y="170" class="text">OpenRouter/OpenAI chat completions</text>
+  <text x="820" y="192" class="text">Model routing via model_config.py</text>
+
+  <rect x="390" y="320" width="420" height="190" class="accent" />
+  <text x="410" y="352" class="label">Execution and Healing</text>
+  <text x="410" y="378" class="text">healing_loop.py -> generate_and_heal()</text>
+  <text x="410" y="400" class="text">executor.py -> execute_file()</text>
+  <text x="410" y="422" class="text">docker_executor.py (safe sandbox)</text>
+  <text x="410" y="444" class="text">subprocess fallback (unsafe warning)</text>
+
+  <rect x="860" y="320" width="500" height="190" class="db" />
+  <text x="880" y="352" class="label">Auth, Limits, Persistence</text>
+  <text x="880" y="378" class="text">api_key_auth.py / rate_limiter.py</text>
+  <text x="880" y="400" class="text">database.py (users, api_keys, generation_jobs)</text>
+  <text x="880" y="422" class="text">web_server.py updates job status and usage</text>
+
+  <rect x="40" y="320" width="300" height="190" class="box" />
+  <text x="60" y="352" class="label">Output Layer</text>
+  <text x="60" y="378" class="text">- shared_deps.md</text>
+  <text x="60" y="400" class="text">- generated source files</text>
+  <text x="60" y="422" class="text">- status streamed via SSE</text>
+
+  <rect x="390" y="560" width="970" height="210" class="train" />
+  <text x="410" y="592" class="label">Training Subsystem</text>
+  <text x="410" y="618" class="text">training/train.py: collect -> build dataset -> finetune -> status/evaluate</text>
+  <text x="410" y="640" class="text">data_collector.py, dataset_builder.py, finetune_manager.py, model_selector.py</text>
+  <text x="410" y="662" class="text">Produces fine-tuned models reused by code generation routing</text>
+
+  <line x1="340" y1="150" x2="390" y2="150" class="arrow" />
+  <line x1="750" y1="170" x2="800" y2="170" class="arrow" />
+  <line x1="570" y1="270" x2="570" y2="320" class="arrow" />
+  <line x1="810" y1="415" x2="860" y2="415" class="arrow" />
+  <line x1="390" y1="415" x2="340" y2="415" class="arrow" />
+  <line x1="880" y1="510" x2="880" y2="560" class="arrow" />
+
+  <text x="40" y="840" class="text">Flow: Client -> Orchestration -> Models -> Execution/Healing -> Output, with Auth/DB and Training integrated.</text>
+</svg>
