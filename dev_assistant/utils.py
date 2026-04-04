@@ -15,5 +15,5 @@ def write_file(file_path: str, content: str):
     # if filepath doesn't exist, create it
     if not os.path.exists(os.path.dirname(file_path)):
         os.makedirs(os.path.dirname(file_path))
-    with open(file_path, "w") as f:
+    with open(file_path, "w", encoding="utf-8", errors="replace") as f:
         f.write(content)

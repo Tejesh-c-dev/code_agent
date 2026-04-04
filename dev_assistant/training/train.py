@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import pickle
+import sys
 from pathlib import Path
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -15,6 +16,12 @@ from dev_assistant.training.data_collector import collect_training_examples
 from dev_assistant.training.dataset_builder import build_finetune_dataset
 from dev_assistant.training.finetune_manager import FineTuneManager
 from dev_assistant.training.model_selector import ModelSelector
+
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 
 TRAINING_DIR = Path("training_data")
